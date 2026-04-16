@@ -52,6 +52,10 @@ class ActivityMonitorService : Service(), SensorEventListener {
         startMonitoringLoop()
     }
 
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        return START_STICKY
+    }
+
     private fun registerSensors() {
         accelerometer?.let {
             sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL)
@@ -81,7 +85,7 @@ class ActivityMonitorService : Service(), SensorEventListener {
                 } else {
                     if (isActive && (System.currentTimeMillis() - lastMovementTime > 5000)) {
                         isActive = false
-                        lastMovementTime = System.currentTimeMillis()
+                        // Don't update lastMovementTime here, so we can track how long it's been since the last movement
                     }
                 }
 
