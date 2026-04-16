@@ -1,3 +1,17 @@
 <resources>
-    <string name="app_name">ActivityApp</string>
+    <string name="app_name">Activity Reminder</string>
+    <string name="start_service">Start Monitoring</string>
+    <string name="stop_service">Stop Monitoring</string>
+    <string name="status_active">Current Status: Active</string>
+    <string name="status_inactive">Current Status: Resting</string>
+    <string name="sensor_data_title">Live Sensor Data</string>
+    <string name="accelerometer_label">Accelerometer:</string>
+    <string name="gyroscope_label">Gyroscope:</string>
+    <string name="activity_log_title">Activity Log</string>
+    <string name="unsteady_alert_title">Unsteady Movement</string>
+    <string name="unsteady_alert_msg">Please sit down and rest.</string>
+    <string name="move_reminder_title">Time to Move!</string>
+    <string name="move_reminder_msg">You\'ve been inactive for a while. Try stretching!</string>
+    <string name="rest_reminder_title">Time to Rest</string>
+    <string name="rest_reminder_msg">You\'ve been active for 60 minutes. Please take a break.</string>
 </resources>
