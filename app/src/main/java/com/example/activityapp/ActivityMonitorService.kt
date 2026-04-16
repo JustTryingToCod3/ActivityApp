@@ -3,6 +3,7 @@ package com.example.activityapp
 import android.app.*
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ServiceInfo
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
@@ -37,7 +38,16 @@ class ActivityMonitorService : Service(), SensorEventListener {
 
         registerSensors()
         createNotificationChannel()
-        startForeground(NOTIFICATION_ID, createNotification("Monitoring activity..."))
+        
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            startForeground(
+                NOTIFICATION_ID, 
+                createNotification("Monitoring activity..."),
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_HEALTH
+            )
+        } else {
+            startForeground(NOTIFICATION_ID, createNotification("Monitoring activity..."))
+        }
         
         startMonitoringLoop()
     }
@@ -86,6 +96,19 @@ class ActivityMonitorService : Service(), SensorEventListener {
                     sendAlert("Unsteady Movement Detected", "Please consider sitting down and resting.")
                 }
             }
+            Sensor.TYPE_ACCELEROMETER -> {
+                // Fallback for unsteady detection if gyroscope is missing
+                if (gyroscope == null) {
+                    val x = event.values[0]
+                    val y = event.values[1]
+                    val z = event.values[2]
+                    val magnitude = sqrt(x * x + y * y + z * z)
+                    // High jitter in accelerometer can indicate unsteadiness
+                    if (Math.abs(magnitude - 9.8) > 5.0) {
+                        sendAlert("Unsteady Movement Detected", "Please take care and consider sitting down.")
+                    }
+                }
+            }
         }
     }
 
@@ -127,10 +150,19 @@ class ActivityMonitorService : Service(), SensorEventListener {
     }
 
     private fun createNotification(content: String): Notification {
+        val intent = Intent(this, MainActivity::class.java)
+        val pendingIntent = PendingIntent.getActivity(
+            this, 
+            0, 
+            intent,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("Activity Reminder")
             .setContentText(content)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setContentIntent(pendingIntent)
             .setOngoing(true)
             .build()
     }
