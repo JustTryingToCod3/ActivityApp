@@ -84,6 +84,14 @@ class ActivityMonitorService : Service(), SensorEventListener {
                         lastMovementTime = System.currentTimeMillis()
                     }
                 }
+
+                // Fallback for unsteady detection if gyroscope is missing
+                if (gyroscope == null) {
+                    // High jitter in accelerometer can indicate unsteadiness
+                    if (Math.abs(magnitude - 9.8) > 5.0) {
+                        sendAlert("Unsteady Movement Detected", "Please take care and consider sitting down.")
+                    }
+                }
             }
             Sensor.TYPE_GYROSCOPE -> {
                 val x = event.values[0]
@@ -94,19 +102,6 @@ class ActivityMonitorService : Service(), SensorEventListener {
                 // Unstable movement check (wobbly gait)
                 if (rotationMagnitude > 3.0) {
                     sendAlert("Unsteady Movement Detected", "Please consider sitting down and resting.")
-                }
-            }
-            Sensor.TYPE_ACCELEROMETER -> {
-                // Fallback for unsteady detection if gyroscope is missing
-                if (gyroscope == null) {
-                    val x = event.values[0]
-                    val y = event.values[1]
-                    val z = event.values[2]
-                    val magnitude = sqrt(x * x + y * y + z * z)
-                    // High jitter in accelerometer can indicate unsteadiness
-                    if (Math.abs(magnitude - 9.8) > 5.0) {
-                        sendAlert("Unsteady Movement Detected", "Please take care and consider sitting down.")
-                    }
                 }
             }
         }
