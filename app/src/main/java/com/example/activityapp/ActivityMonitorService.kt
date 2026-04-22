@@ -16,6 +16,10 @@ import kotlin.math.sqrt
 
 class ActivityMonitorService : Service(), SensorEventListener {
 
+    companion object {
+        var isRunning = false
+    }
+
     private lateinit var sensorManager: SensorManager
     private var accelerometer: Sensor? = null
     private var gyroscope: Sensor? = null
@@ -32,6 +36,7 @@ class ActivityMonitorService : Service(), SensorEventListener {
 
     override fun onCreate() {
         super.onCreate()
+        isRunning = true
         sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
         gyroscope = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE)
@@ -184,6 +189,7 @@ class ActivityMonitorService : Service(), SensorEventListener {
 
     override fun onDestroy() {
         super.onDestroy()
+        isRunning = false
         sensorManager.unregisterListener(this)
         serviceJob.cancel()
     }

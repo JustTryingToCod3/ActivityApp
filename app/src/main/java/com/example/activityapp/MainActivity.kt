@@ -40,7 +40,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun ActivityReminderScreen() {
     val context = LocalContext.current
-    var isServiceRunning by remember { mutableStateOf(false) }
+    var isServiceRunning by remember { mutableStateOf(ActivityMonitorService.isRunning) }
     var hasNotificationPermission by remember {
         mutableStateOf(
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
