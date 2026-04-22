@@ -24,6 +24,10 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.example.activityapp.ui.theme.ActivityAppTheme
 
+import android.os.PowerManager
+import android.provider.Settings
+import android.net.Uri
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,20 +48,33 @@ fun ActivityReminderScreen() {
     var hasNotificationPermission by remember {
         mutableStateOf(
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                ContextCompat.checkSelfPermission(
-                    context,
-                    Manifest.permission.POST_NOTIFICATIONS
-                ) == PackageManager.PERMISSION_GRANTED
-            } else {
-                true
-            }
+                ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+            } else true
+        )
+    }
+    
+    var hasActivityPermission by remember {
+        mutableStateOf(
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                ContextCompat.checkSelfPermission(context, Manifest.permission.ACTIVITY_RECOGNITION) == PackageManager.PERMISSION_GRANTED
+            } else true
         )
     }
 
+    val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+    val isIgnoringBatteryOptimizations = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        powerManager.isIgnoringBatteryOptimizations(context.packageName)
+    } else true
+
     val permissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        hasNotificationPermission = isGranted
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            hasNotificationPermission = permissions[Manifest.permission.POST_NOTIFICATIONS] ?: hasNotificationPermission
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            hasActivityPermission = permissions[Manifest.permission.ACTIVITY_RECOGNITION] ?: hasActivityPermission
+        }
     }
 
     Scaffold(
@@ -79,14 +96,37 @@ fun ActivityReminderScreen() {
                 .padding(innerPadding)
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+            verticalArrangement = Arrangement.spacedBy(15.dp)
         ) {
-            if (!hasNotificationPermission && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            // Permission Requests
+            if ((!hasNotificationPermission && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) || 
+                (!hasActivityPermission && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)) {
+                
                 Button(
-                    onClick = { permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS) },
+                    onClick = { 
+                        val perms = mutableListOf<String>()
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) perms.add(Manifest.permission.POST_NOTIFICATIONS)
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) perms.add(Manifest.permission.ACTIVITY_RECOGNITION)
+                        permissionLauncher.launch(perms.toTypedArray())
+                    },
+                    modifier = Modifier.fillMaxWidth().height(60.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF57C00))
+                ) {
+                    Text("Enable Permissions", fontSize = 18.sp)
+                }
+            }
+
+            if (!isIgnoringBatteryOptimizations && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                OutlinedButton(
+                    onClick = {
+                        val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+                            data = Uri.parse("package:${context.packageName}")
+                        }
+                        context.startActivity(intent)
+                    },
                     modifier = Modifier.fillMaxWidth().height(60.dp)
                 ) {
-                    Text("Enable Notifications", fontSize = 18.sp)
+                    Text("Allow Background Running", fontSize = 16.sp)
                 }
             }
 
