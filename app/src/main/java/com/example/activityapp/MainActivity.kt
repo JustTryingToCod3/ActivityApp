@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.example.activityapp.ui.theme.ActivityAppTheme
 
+import android.content.Context
 import android.os.PowerManager
 import android.provider.Settings
 import android.net.Uri
