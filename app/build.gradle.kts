@@ -9,18 +9,28 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.activityapp"
+        applicationId = "com.example.activityapp.v2"
         minSdk = 24
         targetSdk = 31
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "1.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    signingConfigs {
+        create("release") {
+            storeFile = file("/home/adams-laptop/.var/app/com.google.AndroidStudio/config/.android/debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
